@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AWS Region Latency Test</title>
+</head>
+<body>
+  <pre id="output">Measuring latency...</pre>
+  <script>
+    const regions = [
+      { name: 'us-east-1', url: 'https://auvmjpyjy6.us-east-1.awsapprunner.com/' },
+      { name: 'us-west-2', url: 'https://rzemmgypf7.us-west-2.awsapprunner.com/' }
+    ];
+
+    async function measureLatency(region) {
+      const start = performance.now();
+      try {
+        const response = await fetch(region.url, { mode: 'cors', cache: 'no-store' });
+        await response.text();
+        const end = performance.now();
+        return { name: region.name, url: region.url, ms: (end - start).toFixed(2), success: true };
+      } catch (e) {
+        const end = performance.now();
+        return { name: region.name, url: region.url, ms: (end - start).toFixed(2), success: false, error: e.message };
+      }
+    }
+
+    async function run() {
+      const results = [];
+      for (const region of regions) {
+        const result = await measureLatency(region);
+        results.push(result);
+      }
+
+      const lines = results.map(r => {
+        if (r.success) {
+          return `${r.name} (${r.url}) - ${r.ms} ms`;
+        } else {
+          return `${r.name} (${r.url}) - failed after ${r.ms} ms (${r.error})`;
+        }
+      });
+
+      document.getElementById('output').textContent = lines.join('\n');
+    }
+
+    window.addEventListener('load', run);
+  </script>
+</body>
+</html>
+
